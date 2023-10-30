@@ -18,7 +18,7 @@ from bs4 import BeautifulSoup
 '''
 
 # 请确保你的城市名是对的，建议先在网站上搜索一下，看看网站上的城市名是什么
-city = 'changshu' # 此处修改城市
+city = 'wuhan' # 此处修改城市
 url = 'https://' + city + '.8684.cn'
 
 # 这里按照你的需求修改，我们是爬取 `以数字开头` 的公交路线
