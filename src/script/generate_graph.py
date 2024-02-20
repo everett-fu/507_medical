@@ -1,53 +1,114 @@
 import pandas as pd
 import numpy as np
+import math
 
 # 从 Excel 文件中读取数据
 file_path = 'data/changshu.xls'
 data = pd.read_excel(file_path)
 
-# 根据需要选择指定数量的随机点
+
+# 随机选取n行的数据，返回n行dataframe数据
 def select_random_points(data, n):
     # 从数据中随机选择 n 个点
     selected_points = data.sample(n)
     return selected_points
 
-# 构建邻接矩阵函数
-def build_adjacency_matrix(data, size):
-    # 创建一个空的邻接矩阵
-    adjacency_matrix_distance = np.zeros((size, size))  # 距离邻接矩阵
-    adjacency_matrix_charge = np.zeros((size, size))  # 充电路段邻接矩阵
-    adjacency_matrix_speed = np.zeros((size, size))  # 速度邻接矩阵
 
-    # TODO: 在这里实现根据数据构建邻接矩阵的逻辑
+# 使用勾股定理计算坐标，这个方式不太准确，球面计算的库不太常见，不太好下，先使用勾股定理，后面替换
+def euclidean_distance(point1, point2):
+    x1, y1 = point1
+    x2, y2 = point2
+    distance = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+    # 用的是经纬度计算，经纬度差一度地图上相差100km，所以下面乘100
+    return distance * 100
+
+
+# 构建邻接矩阵函数
+'''
+这个函数用于生成三个邻接矩阵，分别是距离邻接矩阵，充电路段邻接矩阵，速度邻接矩阵
+该函数有五个输入，分别是
+    + 数据源（为爬取下来的xls数据）
+    + 是否是随机速度（如果是-1则生成一个随机的速度邻接矩阵，如果是一个正数，生成一个常数的邻接矩阵）
+    + 是否是随机点位（如果是-1则随机从文件取n个点，m个点组成的充电路段）
+    + 随机点位模式下取的n位数量             注意：这个值在启用随机点位的情况下才有用，如果没有启用随机点位，可以不用输入
+    + 随机点位模式下取的m个点组成的充电路段   注意：这个值在启用随机点位的情况下才有用，如果没有启用随机点位，可以不用输入
+
+该函数的所有输入都没有进行判断，请在输入的时候先自行判断
+'''
+
+
+def build_adjacency_matrix(data, random_speed, random_point, n=None, m=None):
+    # 判断是不是随机生成点位
+    # 是随机生成点位
+    if random_point == -1:
+        points = select_random_points(data, n)
+        charge_points = select_random_points(points, m)
+    # 不是随机生成
+    else:
+        #
+        # 只是占位，下面没有实际作用
+        #
+        points = select_random_points(data, 5)
+        charge_points = select_random_points(points, 3)
+
+    # 将dataframe数据变成一个二维列表
+    points = points[['longitude', 'latitude']].values.tolist()
+    charge_points = charge_points[['longitude', 'latitude']].values.tolist()
+
+    # 检测点，判断取数据是否正确
+    # print(points)
+    # print(charge_points)
+
+    # 矩阵的尺寸
+    size = len(points)
+
+    # 生成距离邻接矩阵
+    # 初始化矩阵
+    adjacency_matrix_distance = np.zeros((size, size))
+    # 遍历二维矩阵，填入计算后的值
+    for i in range(size):
+        for j in range(size):
+            if i != j:
+                adjacency_matrix_distance[i, j] = euclidean_distance(points[i], points[j])
+
+    # 检测点，用于判断距离邻接矩阵是否正确
+    # print(adjacency_matrix_distance)
+
+    # 创建一个充电路段邻接矩阵
+    adjacency_matrix_charge = np.zeros((size, size))
+    # 遍历二维矩阵，填入邻接矩阵
+    for i in range(size):
+        for j in range(size):
+            if i != j and points[i] in charge_points and points[j] in charge_points:
+                adjacency_matrix_charge[i, j] = 1
+
+    # 检测点，判断充电矩阵生成是否正确
+    # print(adjacency_matrix_charge)
+
+    # 创建一个速度矩阵
+    # 如果random_speed 的值为-1，采用随机生成40-60数据
+    if random_speed == -1:
+        adjacency_matrix_speed = np.random.randint(40, 61, size=(size, size))  # 充电路段邻接矩阵
+    # 不是随机生成点位，采用输入的数字填充矩阵
+    else:
+        adjacency_matrix_speed = np.full((size, size), random_speed)  # 充电路段邻接矩阵
+
+    # 检测点，判断速度矩阵生成是否正确
+    # print(adjacency_matrix_speed)
 
     return adjacency_matrix_distance, adjacency_matrix_charge, adjacency_matrix_speed
 
-# 主函数
-def main(random_speed, random_points, n, m):
-    # 读取数据并选择指定数量的随机点
-    if random_points == -1:
-        selected_points = select_random_points(data, n)
-    else:
-        # 这里需要根据特定要求选择点
-        pass
 
-    # 构建邻接矩阵
-    size = len(selected_points)
-    distance_matrix, charge_matrix, speed_matrix = build_adjacency_matrix(selected_points, size)
+# 用于测试
+def main(data, randam_speed, random_point, n=None, m=None):
+    adjacency_matrix_distance, adjacency_matrix_charge, adjacency_matrix_speed = \
+        build_adjacency_matrix(data, randam_speed, random_point, n, m)
+    print(adjacency_matrix_distance)
+    print(adjacency_matrix_charge)
+    print(adjacency_matrix_speed)
 
-    # 生成随机速度矩阵（如果需要）
-    if random_speed == -1:
-        # 生成随机速度矩阵的逻辑
-        pass
 
-    return distance_matrix, charge_matrix, speed_matrix
-
-# 测试代码
-random_speed = -1  # 是否随机速度
-random_points = -1  # 是否随机选取点
-n = 10  # 选取的随机点数量
-m = 5  # 选一条 m 个点的路径作为充电路段
-size = 10  # n*n 的矩阵
-distance_matrix, charge_matrix, speed_matrix = main(random_speed, random_points, n, m)
-print(distance_matrix, charge_matrix, speed_matrix)
-
+if __name__ == "__main__":
+    main(data, -1, -1, 5, 3)
+    print('\n')
+    main(data, 50, 201)
