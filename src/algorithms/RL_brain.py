@@ -14,23 +14,35 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
+# 设置随机种子
 np.random.seed(1)
 tf.set_random_seed(1)
 
 
 # Deep Q Network off-policy
 class DeepQNetwork:
+    # 初始化参数
     def __init__(
             self,
+            # 可执行动作数量
             n_actions,
+            # 可观测到的特征数量
             n_features,
+            # 学习率
             learning_rate=0.01,
+            # 奖励衰减值
             reward_decay=0.9,
+            # 贪心策略值
             e_greedy=0.9,
+            # 多少步更新目标网络的参数
             replace_target_iter=300,
+            # 经验池的大小
             memory_size=500,
+            # 批量学习的样本数量
             batch_size=32,
+            # 贪心策略值的增量
             e_greedy_increment=None,
+            # 是否输出计算图
             output_graph=False,
     ):
         self.n_actions = n_actions
@@ -44,7 +56,7 @@ class DeepQNetwork:
         self.epsilon_increment = e_greedy_increment
         self.epsilon = 0 if e_greedy_increment is not None else self.epsilon_max
 
-        # total learning step
+        # 初始化学习步数计数器
         self.learn_step_counter = 0
 
         # initialize zero memory [s, a, r, s_]
