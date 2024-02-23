@@ -60,25 +60,32 @@ class DeepQNetwork:
         self.learn_step_counter = 0
 
         # initialize zero memory [s, a, r, s_]
+        # 初始化记忆库，用于存储（状态，动作，奖励，下一个状态）
         self.memory = np.zeros((self.memory_size, n_features * 2 + 2))
 
         # consist of [target_net, evaluate_net]
+        # 创建评估网络，目标网络
         self._build_net()
         t_params = tf.get_collection('target_net_params')
         e_params = tf.get_collection('eval_net_params')
         self.replace_target_op = [tf.assign(t, e) for t, e in zip(t_params, e_params)]
 
+        # 创建TensorFlow会话
         self.sess = tf.Session()
 
+        # 判断是否生成日志文件
         if output_graph:
             # $ tensorboard --logdir=logs
             # tf.train.SummaryWriter soon be deprecated, use following
             tf.summary.FileWriter("logs/", self.sess.graph)
 
+        # 初始化全局变量，并创建一个列表来记录每一步的成本
         self.sess.run(tf.global_variables_initializer())
         self.cost_his = []
 
+    # 创建评估网络与目标网络
     def _build_net(self):
+        # 创建评估网络
         # ------------------ build evaluate_net ------------------
         self.s = tf.placeholder(tf.float32, [None, self.n_features], name='s')  # input
         self.q_target = tf.placeholder(tf.float32, [None, self.n_actions], name='Q_target')  # for calculating loss
@@ -105,6 +112,7 @@ class DeepQNetwork:
         with tf.variable_scope('train'):
             self._train_op = tf.train.RMSPropOptimizer(self.lr).minimize(self.loss)
 
+        # 创建目标网络
         # ------------------ build target_net ------------------
         self.s_ = tf.placeholder(tf.float32, [None, self.n_features], name='s_')    # input
         with tf.variable_scope('target_net'):
@@ -123,6 +131,7 @@ class DeepQNetwork:
                 b2 = tf.get_variable('b2', [1, self.n_actions], initializer=b_initializer, collections=c_names)
                 self.q_next = tf.matmul(l1, w2) + b2
 
+    # 观察状态，并存储到记忆库中
     def store_transition(self, s, a, r, s_):
         if not hasattr(self, 'memory_counter'):
             self.memory_counter = 0
@@ -135,6 +144,7 @@ class DeepQNetwork:
 
         self.memory_counter += 1
 
+    # 根据状态与贪婪策略选择一个动作
     def choose_action(self, observation):
         # to have batch dimension when feed into tf placeholder
         observation = observation[np.newaxis, :]
@@ -147,6 +157,7 @@ class DeepQNetwork:
             action = np.random.randint(0, self.n_actions)
         return action
 
+    # 学习神经网络
     def learn(self):
         # check to replace target parameters
         if self.learn_step_counter % self.replace_target_iter == 0:
@@ -212,6 +223,7 @@ class DeepQNetwork:
         self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max
         self.learn_step_counter += 1
 
+    # 绘制图形
     def plot_cost(self):
         import matplotlib.pyplot as plt
         plt.plot(np.arange(len(self.cost_his)), self.cost_his)
