@@ -34,8 +34,7 @@ class DeepQNetwork:
             reward_decay=0.9,
             # 贪心策略值
             e_greedy=0.9,
-            # 多少步更新目标网络的参数
-            replace_target_iter=300,
+            # 记录 cost 误差replace_target_iter=300,
             # 经验池的大小
             memory_size=500,
             # 批量学习的样本数量
@@ -49,11 +48,17 @@ class DeepQNetwork:
         self.n_features = n_features
         self.lr = learning_rate
         self.gamma = reward_decay
+        # epsilon 的最大值
         self.epsilon_max = e_greedy
+        # 更换 target_net 的步数
         self.replace_target_iter = replace_target_iter
+        # 记忆上限
         self.memory_size = memory_size
+        # 每次更新时从 memory 里面取多少记忆出来
         self.batch_size = batch_size
+        # epsilon 的增量
         self.epsilon_increment = e_greedy_increment
+        # 是否开启探索模式, 并逐步减少探索次数
         self.epsilon = 0 if e_greedy_increment is not None else self.epsilon_max
 
         # 初始化学习步数计数器
@@ -132,6 +137,7 @@ class DeepQNetwork:
                 self.q_next = tf.matmul(l1, w2) + b2
 
     # 观察状态，并存储到记忆库中
+    # 存储记忆
     def store_transition(self, s, a, r, s_):
         if not hasattr(self, 'memory_counter'):
             self.memory_counter = 0
@@ -139,21 +145,25 @@ class DeepQNetwork:
         transition = np.hstack((s, [a, r], s_))
 
         # replace the old memory with new memory
+        # 总 memory 大小是固定的, 如果超出总大小, 旧 memory 就被新 memory 替换
         index = self.memory_counter % self.memory_size
         self.memory[index, :] = transition
 
         self.memory_counter += 1
 
     # 根据状态与贪婪策略选择一个动作
+    # 选择行为
     def choose_action(self, observation):
         # to have batch dimension when feed into tf placeholder
         observation = observation[np.newaxis, :]
 
         if np.random.uniform() < self.epsilon:
             # forward feed the observation and get q value for every actions
+            # 让 eval_net 神经网络生成所有 action 的值, 并选择值最大的 action
             actions_value = self.sess.run(self.q_eval, feed_dict={self.s: observation})
             action = np.argmax(actions_value)
         else:
+            # 随机选择
             action = np.random.randint(0, self.n_actions)
         return action
 
@@ -214,16 +224,20 @@ class DeepQNetwork:
         """
 
         # train eval network
+        # 训练 eval_net
         _, self.cost = self.sess.run([self._train_op, self.loss],
                                      feed_dict={self.s: batch_memory[:, :self.n_features],
                                                 self.q_target: q_target})
+        # 记录 cost 误差
         self.cost_his.append(self.cost)
 
         # increasing epsilon
+        # 逐渐增加 epsilon, 降低行为的随机性
         self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max
         self.learn_step_counter += 1
 
     # 绘制图形
+    # 查看学习效果
     def plot_cost(self):
         import matplotlib.pyplot as plt
         plt.plot(np.arange(len(self.cost_his)), self.cost_his)
