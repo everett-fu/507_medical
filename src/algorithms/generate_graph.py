@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 # 从 Excel 文件中读取数据
-file_path = 'data/changshu.xls'
+file_path = '../script/data/changshu.xls'
 data = pd.read_excel(file_path)
 
 
@@ -14,13 +14,25 @@ def select_random_points(data, n):
     return selected_points
 
 
-# 使用勾股定理计算坐标，这个方式不太准确，球面计算的库不太常见，不太好下，先使用勾股定理，后面替换
+# 计算两个点之间的欧式距离，返回km
 def euclidean_distance(point1, point2):
-    x1, y1 = point1
-    x2, y2 = point2
-    distance = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-    # 用的是经纬度计算，经纬度差一度地图上相差100km，所以下面乘100
-    return distance * 100
+    # 赋值经纬度
+    lon1, lat1 = point1
+    lon2, lat2 = point2
+
+    # 将经纬度转换为弧度
+    radian = lambda x: x * math.pi / 180
+
+    # 地球平均半径（单位：米）
+    R = 6371009
+    dlon = radian(lon2 - lon1)
+    dlat = radian(lat2 - lat1)
+
+    a = (math.sin(dlat / 2)) ** 2 + math.cos(radian(lat1)) * math.cos(radian(lat2)) * (math.sin(dlon / 2)) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    distance = R * c
+
+    return distance / 1000
 
 
 # 构建邻接矩阵函数
@@ -34,6 +46,8 @@ def euclidean_distance(point1, point2):
     + 随机点位模式下取的m个点组成的充电路段   注意：这个值在启用随机点位的情况下才有用，如果没有启用随机点位，可以不用输入
 
 该函数的所有输入都没有进行判断，请在输入的时候先自行判断
+
+最后返回三个邻接矩阵，分别是距离邻接矩阵，充电路段邻接矩阵，速度邻接矩阵，单位分别是km，0/1，km/h
 '''
 
 
