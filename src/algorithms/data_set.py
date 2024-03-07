@@ -1,3 +1,4 @@
+from random import random
 import pandas as pd
 import numpy as np
 import math
@@ -112,6 +113,30 @@ def build_adjacency_matrix(data, random_speed, random_point, n=None, m=None):
 
     return adjacency_matrix_distance, adjacency_matrix_charge, adjacency_matrix_speed
 
+
+# 初始化电车信息
+# 输入：电车数量，节点数量
+'''
+这个函数用于初始化电车信息
+该函数有两个输入，分别是
+    + 电车数量
+    + 节点数量
+该函数的输出是一个列表，列表中的每一个元素是一个列表，包含了电车的起始路段，目标地址，初始电量，初始deadline
+'''
+def ini_evs_info(number_evs, number_nodes):
+    # 用于存储电车的起始路段，目标地址，初始电量，初始deadline
+    evs_info = []
+    for i in range(number_evs):
+        # 随机生成电车的起始路段
+        start = random.randint(0, number_nodes - 1)
+        # 随机生成电车的目标地址
+        end = random.randint(0, number_nodes - 1)
+        # 随机生成电车的初始电量
+        power = random.randint(50, 80)
+        # 随机生成电车的初始deadline
+        deadline = random.randint(1, 5)
+        evs_info.append([start, end, power, deadline])
+    return evs_info
 
 # 用于测试
 def main(data, randam_speed, random_point, n=None, m=None):
