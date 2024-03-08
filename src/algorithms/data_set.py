@@ -3,10 +3,6 @@ import pandas as pd
 import numpy as np
 import math
 
-# 从 Excel 文件中读取数据
-file_path = '../script/data/changshu.xls'
-data = pd.read_excel(file_path)
-
 
 # 随机选取n行的数据，返回n行dataframe数据
 def select_random_points(data, n):
@@ -148,6 +144,11 @@ def main(data, randam_speed, random_point, n=None, m=None):
 
 
 if __name__ == "__main__":
+    # 数据地址
+    file_path = '../script/data/changshu.xls'
+    # 读取数据
+    data = pd.read_excel(file_path)
+
     main(data, -1, -1, 5, 3)
     print('\n')
     main(data, 50, 201)
