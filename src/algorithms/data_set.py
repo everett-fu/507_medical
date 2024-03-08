@@ -135,9 +135,9 @@ def ini_evs_info(number_evs, number_nodes):
     return evs_info
 
 # 用于测试
-def main(data, randam_speed, random_point, n=None, m=None):
+def main(data, random_speed, random_point, n=None, m=None):
     adjacency_matrix_distance, adjacency_matrix_charge, adjacency_matrix_speed = \
-        build_adjacency_matrix(data, randam_speed, random_point, n, m)
+        build_adjacency_matrix(data, random_speed, random_point, n, m)
     print(adjacency_matrix_distance)
     print(adjacency_matrix_charge)
     print(adjacency_matrix_speed)
