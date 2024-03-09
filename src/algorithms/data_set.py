@@ -1,4 +1,4 @@
-from random import random
+import random
 import pandas as pd
 import numpy as np
 import math
@@ -125,12 +125,14 @@ def ini_evs_info(number_evs, number_nodes):
     for i in range(number_evs):
         # 随机生成电车的起始路段
         start = random.randint(0, number_nodes - 1)
-        # 随机生成电车的目标地址
-        end = random.randint(0, number_nodes - 1)
-        # 随机生成电车的初始电量
-        power = random.randint(50, 80)
+        # 随机生成电车的目标地址，直到不等于起始地址
+        end = start
+        while end == start:
+            end = random.randint(0, number_nodes - 1)
+        # 随机生成电车的初始电量round
+        power = round(random.uniform(50, 80), 2)
         # 随机生成电车的初始deadline
-        deadline = random.randint(1, 5)
+        deadline = round(random.uniform(1, 5), 2)
         evs_info.append([start, end, power, deadline])
     return evs_info
 
@@ -143,6 +145,7 @@ def main(data, random_speed, random_point, n=None, m=None):
     print(adjacency_matrix_speed)
 
 
+
 if __name__ == "__main__":
     # 数据地址
     file_path = '../script/data/changshu.xls'
@@ -152,3 +155,6 @@ if __name__ == "__main__":
     main(data, -1, -1, 5, 3)
     print('\n')
     main(data, 50, 201)
+
+    evs_info = ini_evs_info(5, 5)
+    print(evs_info)
