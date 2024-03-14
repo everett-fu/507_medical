@@ -46,8 +46,6 @@ def euclidean_distance(point1, point2):
 
 最后返回三个邻接矩阵，分别是距离邻接矩阵，充电路段邻接矩阵，速度邻接矩阵，单位分别是km，0/1，km/h
 '''
-
-
 def build_adjacency_matrix(data, random_speed, random_point, n=None, m=None):
     # 判断是不是随机生成点位
     # 是随机生成点位
