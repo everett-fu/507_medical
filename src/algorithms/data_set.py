@@ -98,9 +98,12 @@ def build_adjacency_matrix(data, random_speed, random_point, n=None, m=None):
     # 如果random_speed 的值为-1，采用随机生成40-60数据
     if random_speed == -1:
         adjacency_matrix_speed = np.random.randint(40, 61, size=(size, size))  # 充电路段邻接矩阵
+        adjacency_matrix_speed = np.triu(adjacency_matrix_speed) + np.triu(adjacency_matrix_speed, 1).T
     # 不是随机生成点位，采用输入的数字填充矩阵
     else:
         adjacency_matrix_speed = np.full((size, size), random_speed)  # 充电路段邻接矩阵
+    # 生成对称的矩阵，对角线变为0
+    np.fill_diagonal(adjacency_matrix_speed, 0)
 
     # 检测点，判断速度矩阵生成是否正确
     # print(adjacency_matrix_speed)
@@ -115,7 +118,7 @@ def build_adjacency_matrix(data, random_speed, random_point, n=None, m=None):
 该函数有两个输入，分别是
     + 电车数量
     + 节点数量
-该函数的输出是一个列表，列表中的每一个元素是一个列表，包含了电车的起始路段，目标地址，初始电量，初始deadline
+该函数的输出是一个列表，列表中的每一个元素是一个列表。包含了电车的起始路段，目标地址，初始电量，初始deadline
 '''
 def ini_evs_info(number_evs, number_nodes):
     # 用于存储电车的起始路段，目标地址，初始电量，初始deadline
